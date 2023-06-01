@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timetable Generator</title>
+  <style>
+/* the whole style and format of the webpage should be done by ARYA MANDHARE */
+/* KEEP THE STYLE AESTHETIC CHANGE/IMPORT FONTS IF YOU WANT TO CHANGE THEM */
+  </style>
+  <script>
+    function generateTimetable() {
+      //  Rushabh add 'for' loop for addition of teachers name and subjects to them accordigly 
+      // Refer the old page for inpu types if possible create a seperate code which will match the arrys down below accordingly
+      // THIS CODE IS FOR RUSHABH REPEATING AGAIN
+      var teachers = ['Teacher A', 'Teacher B', 'Teacher C', 'Teacher D'];
+      var subjects = ['Subject 1', 'Subject 2', 'Subject 3', 'Subject 4'];
+      var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      var slotsPerDay = 6; // Number of slots per day
+      var breakTime = 1; // Break time in slots
+
+      // Genetic algorithm parameters
+      var populationSize = 10; // Number of individuals in each population
+      var generations = 50; // Number of generations
+      var mutationRate = 0.2; // Probability of mutation
+
+      // Generate initial population
+      function generatePopulation() {
+        var population = [];
+        for (var i = 0; i < populationSize; i++) {
+          var timetable = [];
+          for (var day = 0; day < days.length; day++) {
+            var daySchedule = [];
+            for (var slot = 0; slot < slotsPerDay; slot++) {
+              var teacher = teachers[Math.floor(Math.random() * teachers.length)];
+              var subject = subjects[Math.floor(Math.random() * subjects.length)];
+              daySchedule.push({ teacher: teacher, subject: subject });
+            }
+            timetable.push(daySchedule);
+          }
+          population.push(timetable);
+        }
+        return population;
+      }
+
+      // Evaluate fitness of an individual
+      // if somebody if willing to add credits i.e lectures per week 
+      // one can contact rushabh for addition of that input in the generate population code
+      // here becuase of the limited time constraints i have not considered credits lecture per week parameter 
+      // If somebody has wiligness to change parameters But i have assigned this tasks specificall for ADITI AND ARYA LONARI 
+      // check if its possible for you 
+      function evaluateFitness(individual) {
+        var fitness = 0;
+        for (var day = 0; day < days.length; day++) {
+          var daySchedule = individual[day];
+          var teachersUsed = [];
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            var teacher = daySchedule[slot].teacher;
+            if (teachersUsed.includes(teacher)) {
+              fitness -= 1; // Deduct fitness for same teacher in multiple slots
+            } else {
+              teachersUsed.push(teacher);
+            }
+          }
+        }
+        return fitness;
+      }
+
+      // Mutate an individual
+      function mutate(individual) {
+        for (var day = 0; day < days.length; day++) {
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            if (Math.random() < mutationRate) {
+              individual[day][slot].teacher = teachers[Math.floor(Math.random() * teachers.length)];
+              individual[day][slot].subject = subjects[Math.floor(Math.random() * subjects.length)];
+            }
+          }
+        }
+        return individual;
+      }
+
+      // Select parents for crossover using tournament selection
+      function selectParents(population) {
+        var parents = [];
+        for (var i = 0; i < populationSize; i++) {
+          var candidate1 = population[Math.floor(Math.random() * populationSize)];
+          var candidate2 = population[Math.floor(Math.random() * populationSize)];
+          var fitness1 = evaluateFitness(candidate1);
+          var fitness2 = evaluateFitness(candidate2);
+          parents.push(fitness1 > fitness2 ? candidate1 : candidate2);
+        }
+        return parents;
+      }
+
+      // Crossover two parents to produce two children
+      function crossover(parent1, parent2) {
+        var child1 = JSON.parse(JSON.stringify(parent1)); // Deep copy
+        var child2 = JSON.parse(JSON.stringify(parent2)); // Deep copy
+
+        for (var day = 0; day < days.length; day++) {
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            if (Math.random() < 0.5) {
+              var temp = child1[day][slot];
+              child1[day][slot] = child2[day][slot];
+              child2[day][slot] = temp;
+            }
+          }
+        }
+
+        return [child1, child2];
+      }
+
+      // Generate new population using genetic operators
+      function generateNewPopulation(population) {
+        var parents = selectParents(population);
+        var newPopulation = parents.slice(); // Copy parents to new population
+
+        while (newPopulation.length < populationSize) {
+          var parent1 = parents[Math.floor(Math.random() * parents.length)];
+          var parent2 = parents[Math.floor(Math.random() * parents.length)];
+          var [child1, child2] = crossover(parent1, parent2);
+          child1 = mutate(child1);
+          child2 = mutate(child2);
+          newPopulation.push(child1);
+          newPopulation.push(child2);
+        }
+
+        return newPopulation;
+      }
+
+      // Find the best timetable from a population
+      function findBestTimetable(population) {
+        var bestTimetable = population[0];
+        var bestFitness = evaluateFitness(bestTimetable);
+
+        for (var i = 1; i < populationSize; i++) {
+          var fitness = evaluateFitness(population[i]);
+          if (fitness > bestFitness) {
+            bestFitness = fitness;
+            bestTimetable = population[i];
+          }
+        }
+
+        return bestTimetable;
+      }
+
+      // Generate the timetable
+      var population = generatePopulation();
+      var bestTimetable = population[0];
+
+      for (var i = 0; i < generations; i++) {
+        population = generateNewPopulation(population);
+        bestTimetable = findBestTimetable(population);
+      }
+
+      // Display the timetable
+      var timetableTable = document.getElementById('timetable');
+
+      // Clear existing timetable
+      while (timetableTable.firstChild) {
+        timetableTable.removeChild(timetableTable.firstChild);
+      }
+
+      // Generate timetable table
+      for (var day = 0; day < days.length; day++) {
+        var row = document.createElement('tr');
+        var daySchedule = bestTimetable[day];
+        for (var slot = 0; slot < slotsPerDay; slot++) {
+          var cell = document.createElement('td');
+          cell.textContent = days[day] + ' - Slot ' + (slot + 1) + ': ';
+          cell.textContent += daySchedule[slot].teacher + ' (' + daySchedule[slot].subject + ')';
+          row.appendChild(cell);
+        }
+        timetableTable.appendChild(row);
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Timetable Generator</h1>
+  <button onclick="generateTimetable()">Generate Timetable</button>
+  <table id="timetable"></table>
+</body>
+</html>
