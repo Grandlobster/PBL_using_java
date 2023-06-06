@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timetable Generator</title>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>Timetable Generator</h2>
+
+  <form>
+    <label for="teachers">Enter the names of 6 teachers:</label><br>
+    <input type="text" id="teachers" name="teachers" required><br><br>
+
+    <label for="subjects">Enter the subjects for each teacher (comma-separated):</label><br>
+    <input type="text" id="subjects" name="subjects" required><br><br>
+
+    <button type="button" onclick="generateTimetable()">Generate Timetable</button>
+  </form>
+
+  <h3>Timetable:</h3>
+  <table id="timetable">
+    <tr>
+      <th>Time Slot</th>
+      <th>Classroom 1</th>
+      <th>Classroom 2</th>
+      <th>Classroom 3</th>
+    </tr>
+  </table>
+
+  <script>
+    function generateTimetable() {
+      var teachersInput = document.getElementById('teachers').value.split(',').map(function(item) {
+        return item.trim();
+      });
+
+      var subjectsInput = document.getElementById('subjects').value.split(',').map(function(item) {
+        return item.trim();
+      });
+
+      if (teachersInput.length !== 6 || subjectsInput.length !== 6) {
+        alert("Please enter 6 teacher names and 6 subjects.");
+        return;
+      }
+
+      var timetable = document.getElementById('timetable');
+
+      var slots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5', 'Slot 6'];
+
+      var classrooms = {
+        'Classroom 1': [],
+        'Classroom 2': [],
+        'Classroom 3': []
+      };
+
+      // Assign subjects to each classroom for each slot
+      for (var i = 0; i < slots.length; i++) {
+        var slot = slots[i];
+        
+        var teacher1 = teachersInput[i];
+        var teacher2 = teachersInput[(i + 1) % teachersInput.length];
+        var teacher3 = teachersInput[(i + 2) % teachersInput.length];
+
+        var subject1 = getAvailableSubject(subjectsInput, classrooms['Classroom 1']);
+        var subject2 = getAvailableSubject(subjectsInput, classrooms['Classroom 2']);
+        var subject3 = getAvailableSubject(subjectsInput, classrooms['Classroom 3']);
+
+        classrooms['Classroom 1'].push({ subject: subject1, teacher: teacher1 });
+        classrooms['Classroom 2'].push({ subject: subject2, teacher: teacher2 });
+        classrooms['Classroom 3'].push({ subject: subject3, teacher: teacher3 });
+      }
+
+      // Display the generated timetable
+      for (var j = 0; j < slots.length; j++) {
+        var row = timetable.insertRow();
+
+        var slotCell = row.insertCell(0);
+        slotCell.innerHTML = slots[j];
+
+        var classroom1Cell = row.insertCell(1);
+        classroom1Cell.innerHTML = classrooms['Classroom 1'][j].subject + '<br>(' + classrooms['Classroom 1'][j].teacher + ')';
+
+        var classroom2Cell = row.insertCell(2);
+        classroom2Cell.innerHTML = classrooms['Classroom 2'][j].subject + '<br>(' + classrooms['Classroom 2'][j].teacher + ')';
+
+        var classroom3Cell = row.insertCell(3);
+        classroom3Cell.innerHTML = classrooms['Classroom 3'][j].subject + '<br>(' + classrooms['Classroom 3'][j].teacher + ')';
+      }
+    }
+
+    function getAvailableSubject(subjects, classroom) {
+      var availableSubjects = subjects.filter(function(subject) {
+        return !classroom.some(function(lecture) {
+          return lecture.subject === subject;
+        });
+      });
+
+      return availableSubjects[Math.floor(Math.random() * availableSubjects.length)];
+    }
+  </script>
+</body>
+</html>
