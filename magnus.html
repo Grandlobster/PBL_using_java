@@ -87,13 +87,13 @@
         slotCell.innerHTML = slots[j];
 
         var classroom1Cell = row.insertCell(1);
-        classroom1Cell.innerHTML = classrooms['Classroom 1'][j].subject + '<br>(' + classrooms['Classroom 1'][j].teacher + ')';
+        classroom1Cell.innerHTML = classrooms['Classroom 1'][j].teacher;
 
         var classroom2Cell = row.insertCell(2);
-        classroom2Cell.innerHTML = classrooms['Classroom 2'][j].subject + '<br>(' + classrooms['Classroom 2'][j].teacher + ')';
+        classroom2Cell.innerHTML = classrooms['Classroom 2'][j].teacher;
 
         var classroom3Cell = row.insertCell(3);
-        classroom3Cell.innerHTML = classrooms['Classroom 3'][j].subject + '<br>(' + classrooms['Classroom 3'][j].teacher + ')';
+        classroom3Cell.innerHTML = classrooms['Classroom 3'][j].teacher;
       }
     }
 
@@ -109,3 +109,4 @@
   </script>
 </body>
 </html>
+
