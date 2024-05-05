@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timetable Generator</title>
+  <style>
+      body {
+          margin: 0;
+          padding: 50px;
+          background-color: #deb887;
+          background-image: url('https://i.pinimg.com/564x/03/4c/47/034c479575ec8175127141710eb86b31.jpg');
+          ;
+      }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+      .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #f5deb3;
+          background-image: url('https://i.pinimg.com/564x/15/cb/e5/15cbe5b8d0165306343e19e741068c11.jpg');
+          padding: 25px;
+          border-radius: 5px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+    label {
+      display: block;
+      margin:8px auto;
+      margin-right:8px;
+      color: #555;
+    }
+
+    textarea, input[type="number"], input[type="time"] {
+      width: 95%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script>
+    function generateTimetable() {
+      var teacherSubjectsInput = document.getElementById('teacherSubjects').value;
+      var hardnessInput = document.getElementById('hardness').value;
+      var lecturesPerWeekInput = document.getElementById('lecturesPerWeek').value;
+      var slotsPerDayInput = document.getElementById('slotsPerDay').value;
+      var timeSlotsInput = document.getElementById('timeSlots').value;
+ 
+
+      var teacherSubjects = teacherSubjectsInput.split('\n').map(function(line) {
+        var parts = line.split(':');
+        return { teacher: parts[0].trim(), subject: parts[1].trim() };
+      });
+      var hardnessValues = hardnessInput.split('\n').map(function(hardness) {
+        return parseInt(hardness.trim());
+      });
+      var lecturesPerWeek = lecturesPerWeekInput.split('\n').map(function(lectures) {
+        return parseInt(lectures.trim());
+      });
+      var slotsPerDay = parseInt(slotsPerDayInput);
+      var timeSlots = timeSlotsInput.split('\n').map(function(timeSlot) {
+        return timeSlot.trim();
+      });
+     
+
+      var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+      function generatePopulation() {
+        var population = [];
+        for (var i = 0; i < 100; i++) {
+          var timetable = [];
+          for (var day = 0; day < days.length; day++) {
+            var daySchedule = [];
+            for (var slot = 0; slot < slotsPerDay; slot++) {
+              var teacherSubject = getRandomTeacherSubject(daySchedule);
+              daySchedule.push(teacherSubject);
+            }
+            timetable.push(daySchedule);
+          }
+          population.push(timetable);
+        }
+        return population;
+      }
+
+      function getRandomTeacherSubject(daySchedule) {
+        var availableTeacherSubjects = teacherSubjects.filter(function(teacherSubject) {
+          return !daySchedule.some(function(slot) {
+            return slot.teacher === teacherSubject.teacher;
+          });
+        });
+        return availableTeacherSubjects[Math.floor(Math.random() * availableTeacherSubjects.length)];
+      }
+
+      function evaluateFitness(individual) {
+        var fitness = 0;
+        for (var day = 0; day < days.length; day++) {
+          var daySchedule = individual[day];
+          var teachersUsed = [];
+          var lecturesCount = {};
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            var teacher = daySchedule[slot].teacher;
+            if (teachersUsed.includes(teacher)) {
+              fitness -= 1; // Deduct fitness for same teacher in multiple slots
+            } else {
+              teachersUsed.push(teacher);
+            }
+
+            if (slot === 0 && hardnessValues[teacherSubjects.findIndex(function(ts) {
+                return ts.teacher === teacher;
+              })] > 3) {
+              fitness += 1; // Increase fitness for having hard subjects in the first slot
+            }
+
+            // Count the number of lectures per teacher
+            if (!lecturesCount[teacher]) {
+              lecturesCount[teacher] = 1;
+            } else {
+              lecturesCount[teacher]++;
+            }
+          }
+
+          // Increase fitness based on lectures per week constraint
+          for (var teacher in lecturesCount) {
+            var index = teacherSubjects.findIndex(function(ts) {
+              return ts.teacher === teacher;
+            });
+            if (index !== -1 && lecturesCount[teacher] > lecturesPerWeek[index]) {
+              fitness -= 5; // Deduct fitness for exceeding lectures per week
+            }
+          }
+        }
+        return fitness;
+      }
+
+      function mutate(individual) {
+        for (var day = 0; day < days.length; day++) {
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            if (Math.random() < 0.2) {
+              individual[day][slot] = getRandomTeacherSubject(individual[day]);
+            }
+          }
+        }
+        return individual;
+      }
+
+      function selectParents(population) {
+        var parents = [];
+        for (var i = 0; i < 10; i++) {
+          var randomIndex = Math.floor(Math.random() * population.length);
+          parents.push(population[randomIndex]);
+        }
+        return parents;
+      }
+
+      function crossover(parent1, parent2) {
+        var child1 = [];
+        var child2 = [];
+        for (var day = 0; day < days.length; day++) {
+          var child1Day = [];
+          var child2Day = [];
+          var parent1Day = parent1[day];
+          var parent2Day = parent2[day];
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            if (slot < slotsPerDay / 2) {
+              child1Day.push(parent1Day[slot]);
+              child2Day.push(parent2Day[slot]);
+            } else {
+              child1Day.push(parent2Day[slot]);
+              child2Day.push(parent1Day[slot]);
+            }
+          }
+          child1.push(child1Day);
+          child2.push(child2Day);
+        }
+        return [child1, child2];
+      }
+
+      function generateNewPopulation(population) {
+        var newPopulation = [];
+        while (newPopulation.length < population.length) {
+          var parents = selectParents(population);
+          var offspring = crossover(parents[0], parents[1]);
+          offspring = offspring.map(function(child) {
+            return mutate(child);
+          });
+          newPopulation.push(...offspring);
+        }
+        return newPopulation;
+      }
+
+      function getBestIndividual(population) {
+        var bestFitness = -Infinity;
+        var bestIndividual;
+        for (var i = 0; i < population.length; i++) {
+          var individual = population[i];
+          var fitness = evaluateFitness(individual);
+          if (fitness > bestFitness) {
+            bestFitness = fitness;
+            bestIndividual = individual;
+          }
+        }
+        return bestIndividual;
+      }
+      function formatTimetable(timetable) {
+    var formattedTimetable = '<table>';
+    formattedTimetable += '<tr><th>Day/Slot</th>';
+    for (var slot = 1; slot <= slotsPerDay; slot++) {
+      var timeSlot = timeSlots[slot];
+      formattedTimetable += '<th>Slot ' + slot + ' ' +timeSlot + '</th>';
+    }
+    formattedTimetable += '</tr>';
+    for (var day = 0; day < days.length; day++) {
+      formattedTimetable += '<tr>';
+      formattedTimetable += '<td>' + days[day] + '</td>';
+      for (var slot = 0; slot < slotsPerDay; slot++) {
+        var teacherSubject = timetable[day][slot];
+        var timeSlot = timeSlots[slot];
+        formattedTimetable += '<td>' +  ' - ' + teacherSubject.teacher + ' - ' + teacherSubject.subject + '</td>';
+      }
+      formattedTimetable += '</tr>';
+    }
+    formattedTimetable += '</table>';
+    return formattedTimetable;
+  }
+
+
+
+      var population = generatePopulation();
+      var generations = 10;
+
+      for (var i = 0; i < generations; i++) {
+        population = generateNewPopulation(population);
+      }
+
+      var bestIndividual = getBestIndividual(population);
+      var formattedTimetable = formatTimetable(bestIndividual);
+
+      document.getElementById('timetable').innerHTML = formattedTimetable;
+    }
+
+    function downloadTimetable() {
+      var element = document.getElementById('timetable');
+      var opt = {
+        margin: 0.5,
+        filename: 'timetable.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</head>
+<body>
+  <h1>Timetable Generator</h1>
+  <div class="container">
+    <label for="teacherSubjects">Teacher - Subject</label>
+    <textarea id="teacherSubjects" rows="10" placeholder="Format: TeacherName: SubjectName"></textarea>
+
+    <label for="hardness">Hardness (1-5)</label>
+    <textarea id="hardness" rows="10" placeholder="Format: 3"></textarea>
+
+    <label for="lecturesPerWeek">Lectures per Week</label>
+    <textarea id="lecturesPerWeek" rows="10" placeholder="Format: 3"></textarea>
+
+    <label for="slotsPerDay">Slots per Day</label>
+    <input type="number" id="slotsPerDay" placeholder="Enter number of slots">
+    <label for="timeSlots">Time Slots</label>
+    <textarea id="timeSlots" rows="10" placeholder="Format: 09:00 AM - 10:00 AM"></textarea>
+
+
+    <button onclick="generateTimetable()">Generate Timetable</button>
+
+    <div id="timetable"></div>
+
+    <button onclick="downloadTimetable()">Download Timetable (PDF)</button>
+  </div>
+</body>
+</html>

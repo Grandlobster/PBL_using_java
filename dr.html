@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timetable Generator</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 50px;
+      background-color: #e9f1f7;
+      background-image: url('images.jpg');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      font-family: Cambria, sans-serif;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 25px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin: 8px auto;
+      margin-right: 8px;
+      color: #555;
+      font-family: Bahnschrift, sans-serif;
+    }
+
+    textarea, input[type="number"] {
+      width: 95%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+  <script>
+    function generateTimetable() {
+      // Get input from user
+      var doctorPatients = document.getElementById('doctorPatients').value.split('\n').map(function (line) {
+        var parts = line.split(':');
+        return { doctor: parts[0].trim(), patient: parts[1].trim() };
+      });
+      var hardnessValues = document.getElementById('hardness').value.split('\n').map(function (hardness) {
+        return parseInt(hardness.trim());
+      });
+      var lecturesPerWeek = document.getElementById('lecturesPerWeek').value.split('\n').map(function (lectures) {
+        return parseInt(lectures.trim());
+      });
+      var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      var slotsPerDay = parseInt(document.getElementById('slotsPerDay').value);
+      var breakTime = parseInt(document.getElementById('breakTime').value);
+
+      // Genetic algorithm parameters
+      var populationSize = parseInt(document.getElementById('populationSize').value);
+      var generations = parseInt(document.getElementById('generations').value);
+      var mutationRate = parseFloat(document.getElementById('mutationRate').value);
+
+      // Generate initial population
+      function generatePopulation() {
+        var population = [];
+        for (var i = 0; i < populationSize; i++) {
+          var timetable = [];
+          for (var day = 0; day < days.length; day++) {
+            var daySchedule = [];
+            for (var slot = 0; slot < slotsPerDay; slot++) {
+              var doctorPatient = getRandomDoctorPatient(daySchedule);
+              daySchedule.push(doctorPatient);
+            }
+            timetable.push(daySchedule);
+          }
+          population.push(timetable);
+        }
+        return population;
+      }
+
+      // Get a random doctor patient considering the assigned patients
+      function getRandomDoctorPatient(daySchedule) {
+        var availableDoctorPatients = doctorPatients.filter(function (doctorPatient) {
+          return !daySchedule.some(function (slot) {
+            return slot.doctor === doctorPatient.doctor;
+          });
+        });
+        return availableDoctorPatients[Math.floor(Math.random() * availableDoctorPatients.length)];
+      }
+
+      // Evaluate fitness of an individual
+      function evaluateFitness(individual) {
+        var fitness = 0;
+        for (var day = 0; day < days.length; day++) {
+          var daySchedule = individual[day];
+          var doctorsUsed = [];
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            var doctor = daySchedule[slot].doctor;
+            if (doctorsUsed.includes(doctor)) {
+              fitness -= 1; // Deduct fitness for same doctor in multiple slots
+            } else {
+              doctorsUsed.push(doctor);
+            }
+
+            if (slot === 0 && hardnessValues[doctorPatients.findIndex(function (dp) {
+              return dp.doctor === doctor;
+            })] > 3) {
+              fitness += 1; // Increase fitness for having hard patients in the first slot
+            }
+          }
+        }
+        return fitness;
+      }
+
+      // Mutate an individual
+      function mutate(individual) {
+        for (var day = 0; day < days.length; day++) {
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            if (Math.random() < mutationRate) {
+              individual[day][slot] = getRandomDoctorPatient(individual[day]);
+            }
+          }
+        }
+        return individual;
+      }
+
+      // Select parents for crossover using tournament selection
+      function selectParents(population) {
+        var parents = [];
+        for (var i = 0; i < populationSize; i++) {
+          var candidate1 = population[Math.floor(Math.random() * populationSize)];
+          var candidate2 = population[Math.floor(Math.random() * populationSize)];
+          var fitness1 = evaluateFitness(candidate1);
+          var fitness2 = evaluateFitness(candidate2);
+          parents.push(fitness1 > fitness2 ? candidate1 : candidate2);
+        }
+        return parents;
+      }
+
+      // Crossover two parents to produce two children
+      function crossover(parent1, parent2) {
+        var child1 = JSON.parse(JSON.stringify(parent1)); // Deep copy
+        var child2 = JSON.parse(JSON.stringify(parent2)); // Deep copy
+
+        for (var day = 0; day < days.length; day++) {
+          for (var slot = 0; slot < slotsPerDay; slot++) {
+            if (Math.random() < 0.5) {
+              var temp = child1[day][slot];
+              child1[day][slot] = child2[day][slot];
+              child2[day][slot] = temp;
+            }
+          }
+        }
+
+        return [child1, child2];
+      }
+
+      // Generate new population using genetic operators
+      function generateNewPopulation(population) {
+        var parents = selectParents(population);
+        var newPopulation = parents.slice(); // Copy parents to new population
+
+        while (newPopulation.length < populationSize) {
+          var parent1 = parents[Math.floor(Math.random() * parents.length)];
+          var parent2 = parents[Math.floor(Math.random() * parents.length)];
+          var [child1, child2] = crossover(parent1, parent2);
+          newPopulation.push(mutate(child1));
+          newPopulation.push(mutate(child2));
+        }
+
+        return newPopulation;
+      }
+
+      // Find the best timetable in a population
+      function findBestTimetable(population) {
+        var bestTimetable = population[0];
+        var bestFitness = evaluateFitness(bestTimetable);
+
+        for (var i = 1; i < populationSize; i++) {
+          var fitness = evaluateFitness(population[i]);
+          if (fitness > bestFitness) {
+            bestFitness = fitness;
+            bestTimetable = population[i];
+          }
+        }
+
+        return bestTimetable;
+      }
+
+      // Display the timetable
+      var timetableTable = document.getElementById('timetable');
+
+      // Clear existing timetable
+      while (timetableTable.firstChild) {
+        timetableTable.removeChild(timetableTable.firstChild);
+      }
+
+      // Generate the timetable
+      var population = generatePopulation();
+      var bestTimetable = population[0];
+
+      for (var i = 0; i < generations; i++) {
+        population = generateNewPopulation(population);
+        bestTimetable = findBestTimetable(population);
+      }
+
+      // Generate timetable table
+      for (var day = 0; day < days.length; day++) {
+        var row = document.createElement('tr');
+        var daySchedule = bestTimetable[day];
+        for (var slot = 0; slot < slotsPerDay; slot++) {
+          var cell = document.createElement('td');
+          cell.textContent = days[day] + ' - Slot ' + (slot + 1) + ': ';
+          cell.textContent += daySchedule[slot].doctor + ' (' + daySchedule[slot].patient + ')';
+          row.appendChild(cell);
+        }
+        timetableTable.appendChild(row);
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1 style="font-family:Cambria ">Patient  Schedule   Generator</h1>
+    <label for="teacherSubjects" style="font-family: Bahnschrift">Doctors and Patients:</label>
+    <textarea id="teacherSubjects" rows="5" required placeholder="Format: Doctor1: Patient1&#10;Doctor2: Patient2"></textarea>
+    <label for="hardness" style="font-family: Bahnschrift">Criticality (1-5):</label>
+    <textarea id="hardness" rows="5" required placeholder="Enter hardness values for each doctor's patient"></textarea>
+    <label for="lecturesPerWeek" style="font-family: Bahnschrift">Visits Per Week:</label>
+    <textarea id="lecturesPerWeek" rows="5" required placeholder="Enter the number of lectures per week for each patient"></textarea>
+    <label for="slotsPerDay" style="font-family: Bahnschrift">Rounds Per Day:</label>
+    <input type="number" id="slotsPerDay" required>
+    <label for="breakTime" style="font-family: Bahnschrift">Break Time (in minutes):</label>
+    <input type="number" id="breakTime" required>
+    <label for="populationSize" style="font-family: Bahnschrift">Population Size:</label>
+    <input type="number" id="populationSize" required>
+    <label for="generations" style="font-family: Bahnschrift">Generations:</label>
+    <input type="number" id="generations" required>
+    <label for="mutationRate" style="font-family: Bahnschrift">Mutation Rate:</label>
+    <input type="number" id="mutationRate" step="0.01" required>
+    <button onclick="generateTimetable()">Generate Timetable</button>
+    <table id="timetable"></table>
+  </div>
+</body>
+</html>

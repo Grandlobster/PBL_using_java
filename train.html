@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Train Track Scheduling</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    p {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .button-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+  </style>
+  <script>
+    function generateTimetable() {
+      // Genetic algorithm logic
+
+      var timetableTable = document.getElementById('timetable');
+
+      // Clear existing timetable
+      while (timetableTable.firstChild) {
+        timetableTable.removeChild(timetableTable.firstChild);
+      }
+
+      // Generate timetable table
+      // Modify the code here to populate the timetable table based on the generated timetable data
+      // Example:
+      var timetableData = [
+        ['Train 1', 'Track A', '8:00 AM'],
+        ['Train 2', 'Track B', '9:30 AM'],
+        ['Train 3', 'Track C', '11:00 AM'],
+        ['Train 4', 'Track A', '1:00 PM'],
+        ['Train 5', 'Track B', '2:30 PM'],
+        ['Train 6', 'Track C', '4:00 PM'],
+      ];
+
+      for (var i = 0; i < timetableData.length; i++) {
+        var row = document.createElement('tr');
+        for (var j = 0; j < timetableData[i].length; j++) {
+          var cell = document.createElement('td');
+          cell.textContent = timetableData[i][j];
+          row.appendChild(cell);
+        }
+        timetableTable.appendChild(row);
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Train Track Scheduling</h1>
+  <p>Welcome to the Train Track Scheduling website! This tool uses a genetic algorithm to generate optimized train timetables.</p>
+
+  <div class="button-container">
+    <button class="button" onclick="generateTimetable()">Generate Timetable</button>
+  </div>
+
+  <table id="timetable"></table>
+</body>
+</html>

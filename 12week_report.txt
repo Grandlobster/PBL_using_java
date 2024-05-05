@@ -1,0 +1,52 @@
+WEEK 1-
+Disccusion of ideas- 
+The team members brainstormed ideas while incorpararting disscsions about various hurdles faced in the society as well as various enviornment specfic problems that have an affect over an indviduals life.
+Along the way project was narrowed down to 3 ideas-
+1 Timetable generator
+2 Mental Health app
+3 Social webpage for college
+
+WEEK 2-
+Finalization of project - "TimeTable generator" after disscuions with PBL mentor.
+Recognize and understand individual skillsets of team members to analyze the work distribution process for development of the project,
+
+WEEK 3-
+Research the various applications of having a online schedule generator.
+Research various algorithms that can be used for generation of the project as well as study of similar pre-existing programs available on the internet.
+
+WEEK 4-
+Testing various logics for the program. Implementing the program on different langauges to select the most appropriate and effcient language for implementation of source code. 
+Devlopment of logic.
+
+WEEK 5-
+Writing abstract for the project.
+Devlopment of logic
+Working on PPT
+
+WEEK 6-
+Completion of code required for 1 classroom.
+Review by PBL mnetor and HOD.
+Various suggestion given by sir.
+
+WEEK 7-
+Webpage interface development for 1 classroom code.
+Buildout for logic of 3 classrooms
+
+WEEK 8-
+Trying diffrent languages to select the most effecient source code for 3 classrooms.
+Reserach on future ascpects of project.
+
+WEEK 9-
+Development of front end webpage for future applications of timetable genrator.
+Comleletion of code logic for 3 classrooms
+
+WEEK 10-
+Error handling of both the source codes.
+Webpage designing for 3 classroom code.
+
+WEEK 11-
+Assemble the main user interface for project that includes the access to both the projects as well as future aspects.
+Front end devlopment.
+
+WEEK 12- 
+Error handling, fixing minor bugs.

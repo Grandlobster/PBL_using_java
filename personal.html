@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>personalized tasks scheduler</title>
+    <h1><u>Personalized Tasks Scheduler</u></h1>
+    <style>
+        body {
+            //background-color: #808080;
+            text-align: center;
+            background-image: url("https://i.pinimg.com/564x/8c/f2/07/8cf207cffd6de8ba3d9922c6bd7703d0.jpg");
+            background-size: 50%;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .container {
+            text-align: left;
+            max-width: 300px;
+            margin: 0 auto;
+            background-color: #faf0e6;
+            padding: 25px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <body>
+        <div class="container">
+            <form>
+                <label for="tasks">Enter the tasks to be achicved:</label>
+                <br>
+                <input type="text" id="tasks" name="tasks" required>
+                <br>
+                <br>
+                <label for="time">Enter the time period to be dedicated for each task:</label>
+                <br>
+                <input type="text" id="time" name="time" required>
+                <br>
+                <br>
+                <label for="break">Enter the break time slot between each task:</label>
+                <br>
+                <input type="text" id="break" name="break" required>
+                <br>
+                <br>
+                <button type="button" onclick="generateTimetable()">Generate Timetable</button>
+            </form>
+        </div>
+        <script>
+            function generateTimetable() {
+                var tasksInput = document.getElementById('tasks').value.split(',').map(function (item) {
+                    return item.trim();
+                });
+
+                var timeInput = document.getElementById('time').value.split(',').map(function (item) {
+                    return item.trim();
+                });
+
+                if (tasksInput.length !== timeInput.length) {
+                    alert("Please time slots for each task.");
+                    return;
+                }
+        </script>
+    </body>
+</head >
+</html >
